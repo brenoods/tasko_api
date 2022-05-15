@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
-import { UsersEntity } from './users.entity';
+import { UsersEntity } from './entities/users.entity';
 
 @Injectable()
 export class UsersService {
@@ -20,7 +20,10 @@ export class UsersService {
 
   async findOneOrFailById(id: string) {
     try {
-      return await this.usersRepository.findOneOrFail({ where: [{ id: id }] });
+      return await this.usersRepository.findOneOrFail({
+        select: ['id', 'firstName', 'lastName', 'email'],
+        where: [{ id: id }]
+      });
     }
     catch (error) {
       throw new NotFoundException(error.message);

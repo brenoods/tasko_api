@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { UsersService } from './users.service';
@@ -12,9 +12,8 @@ export class UsersController {
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
-  @ApiOperation({ summary: "List all users" })
-  async index() {
-    return await this.usersService.findAll();
+  async show(@Req() req: any) {
+    return await this.usersService.findOneOrFailById(req.user.id);
   }
 
   @Post()
@@ -22,22 +21,9 @@ export class UsersController {
     return await this.usersService.store(body);
   }
 
-  @Get(':id')
+  @Put()
   @UseGuards(AuthGuard('jwt'))
-  async show(@Param('id', new ParseUUIDPipe()) id: string) {
-    return await this.usersService.findOneOrFailById(id);
-  }
-
-  @Put(':id')
-  @UseGuards(AuthGuard('jwt'))
-  async update(@Param('id', new ParseUUIDPipe()) id: string, @Body() body: UpdateUserDto) {
-    return await this.usersService.update(id, body);
-  }
-
-  @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async destroy(@Param('id', new ParseUUIDPipe()) id: string) {
-    return await this.usersService.destroy(id);
+  async update(@Req() req: any, @Body() body: UpdateUserDto) {
+    return await this.usersService.update(req.user.id, body);
   }
 }
