@@ -18,8 +18,8 @@ export class DailyNotesController {
   }
 
   @Get()
-  findAll() {
-    return this.dailyNotesService.findAll();
+  findAll(@Req() req: any) {
+    return this.dailyNotesService.findAll(req.user.id);
   }
 
   @Get(':id')

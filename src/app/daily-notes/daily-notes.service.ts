@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateDailyNotesDto } from './dto/create-daily-notes.dto';
@@ -17,19 +17,37 @@ export class DailyNotesService {
     return await this.dailyNotesRepository.save(dailyNotes);
   }
 
-  findAll() {
-    return `This action returns all dailyNotes`;
+  async findAll(userId: string) {
+    return await this.dailyNotesRepository.find({
+      select: ['id', 'date', 'notes'],
+      where: [{ userId: userId }]
+    });
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} dailyNote`;
+  async findOne(id: string) {
+    return await this.findOneOrFailById(id);
   }
 
-  update(id: string, updateDailyNotesDto: UpdateDailyNotesDto) {
-    return `This action updates a #${id} dailyNote`;
+  async update(id: string, updateDailyNotesDto: UpdateDailyNotesDto) {
+    const dailyNote = await this.findOneOrFailById(id)
+    this.dailyNotesRepository.merge(dailyNote, updateDailyNotesDto);
+    return await this.dailyNotesRepository.save(dailyNote);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} dailyNote`;
+  async remove(id: string) {
+    await this.findOneOrFailById(id);
+    this.dailyNotesRepository.softDelete({ id });
+  }
+
+  async findOneOrFailById(id: string) {
+    try {
+      return await this.dailyNotesRepository.findOneOrFail({
+        select: ['id', 'date', 'notes'],
+        where: [{ id: id }]
+      });
+    }
+    catch (error) {
+      throw new NotFoundException(error.message);
+    }
   }
 }
